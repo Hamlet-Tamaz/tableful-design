@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tableful — Design Board</title>
+<meta name="description" content="Living design review board for the Tableful app. Always the latest drop." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@0,9..144,300;0,9..144,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --paper:#121016; --panel:#181620; --panel2:#1e1b28; --ink:#f5f3fa; --muted:#9e98aa;
+  --accent:#e8549e; --onaccent:#18161b; --line:rgba(245,243,250,.09);
+  --ticket:#a564d8; --guestlist:#66c8b6;
+}
+*{margin:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,sans-serif;overflow:hidden}
+.serif{font-family:Fraunces,Georgia,serif;font-weight:300}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+#app{display:grid;grid-template-rows:56px 1fr;height:100vh}
+
+/* top bar */
+#top{display:flex;align-items:center;gap:16px;padding:0 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+#top .wordmark{font-family:Fraunces,serif;letter-spacing:.42em;font-size:13px;text-transform:uppercase}
+#top .drop{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#top .drop b{color:var(--accent);font-weight:500}
+#approvalcta{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper);background:var(--accent);color:var(--onaccent);border-radius:999px;padding:8px 16px}
+
+#main{display:grid;grid-template-columns:232px 1fr 300px;min-height:0}
+
+/* left rail */
+#rail{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:14px 10px}
+#rail h2{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);padding:12px 10px 8px}
+.frame{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 10px;border-radius:9px;font-size:12.5px;color:var(--muted)}
+.frame:hover{background:rgba(245,243,250,.05);color:var(--ink)}
+.frame.on{background:rgba(232,84,158,.13);color:var(--ink)}
+.frame .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.frame .dot.ticket{background:var(--ticket)}
+.frame .dot.guestlist{background:var(--guestlist)}
+.frame .dot.a11y{background:var(--ink)}
+.frame .num{font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--muted);margin-left:auto}
+
+/* canvas */
+#canvaswrap{position:relative;overflow:auto;background:
+  radial-gradient(circle at 30% 20%, rgba(232,84,158,.07), transparent 55%),var(--paper);
+  display:flex;align-items:flex-start;justify-content:center;padding:36px}
+#stage{transform-origin:top center;transition:transform .15s ease-out}
+#stage img{display:block;max-width:none;border-radius:14px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.55)}
+#zoombar{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px}
+#zoombar button{font-family:"IBM Plex Mono",monospace;font-size:10.5px;padding:6px 12px;border-radius:999px;color:var(--muted)}
+#zoombar button:hover,#zoombar button.on{color:var(--ink);background:rgba(245,243,250,.07)}
+#keys{position:absolute;top:14px;right:16px;font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+
+/* inspector */
+#insp{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:22px 20px}
+#insp .kick{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent)}
+#insp h1{font-family:Fraunces,serif;font-weight:300;font-size:26px;margin:8px 0 4px;letter-spacing:-.01em}
+#status{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;border:1px solid var(--accent);color:var(--accent);border-radius:999px;padding:3px 10px;margin:6px 0 14px}
+#insp p.desc{font-size:13px;line-height:1.65;color:var(--muted)}
+#insp h3{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+.note{display:flex;gap:8px;font-size:12px;line-height:1.55;color:var(--muted);padding:7px 0;border-top:1px solid var(--line)}
+.note::before{content:"—";color:var(--accent)}
+.swatch{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.swatch .chip{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);flex:none}
+.swatch .name{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em}
+.swatch .val{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--muted);margin-left:auto;text-align:right}
+#foot{padding:14px 18px;border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;line-height:1.9}
+@media (max-width:1000px){#main{grid-template-columns:180px 1fr}#insp{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <span class="wordmark serif">Tableful</span>
+    <span class="drop">Design board · latest drop <b>v3 — a11y &amp; contrast</b> · 2026-09-03</span>
+    <a id="approvalcta" href="#how-to-approve" onclick="alert('To approve this drop for the dev agent: tell the design session \u201capprove v3\u201d (or drop APPROVED into design-sync/APPROVALS.md). The dev agent only implements approved drops.');return false;">Approve for dev</a>
+  </header>
+  <div id="main">
+    <nav id="rail" aria-label="Frames">
+      <h2>Screens</h2>
+      <div id="frames"></div>
+      <h2>Foundations</h2>
+      <div id="foundations"></div>
+    </nav>
+    <div id="canvaswrap">
+      <span id="keys">← → frames · zoom below</span>
+      <div id="stage"><img id="canvas" alt="Selected design frame" /></div>
+      <div id="zoombar" role="group" aria-label="Zoom">
+        <button data-z="0.5">50%</button>
+        <button data-z="0.75">75%</button>
+        <button data-z="1" class="on">100%</button>
+        <button data-z="1.5">150%</button>
+      </div>
+    </div>
+    <aside id="insp" aria-label="Inspector">
+      <p class="kick" id="i-kick"></p>
+      <h1 id="i-title"></h1>
+      <span id="status">Latest — awaiting approval</span>
+      <p class="desc" id="i-desc"></p>
+      <h3>Design notes</h3>
+      <div id="i-notes"></div>
+      <h3>Tokens on this frame</h3>
+      <div id="i-tokens"></div>
+      <div id="foot">Review flow: you approve → dev implements.<br/>Questions → design-sync/REQUESTS.md</div>
+    </aside>
+  </div>
+</div>
+
+<script src="frames/a.js"></script>
+<script src="frames/b.js"></script>
+<script src="frames/c.js"></script>
+<script>
+const FRAMES = window.__TF_FRAMES;
+const rail = document.getElementById('frames');
+const found = document.getElementById('foundations');
+const img = document.getElementById('canvas');
+const stage = document.getElementById('stage');
+let cur = 0;
+
+function swatch(t){
+  return `<div class="swatch"><span class="chip" style="background:${t.css}"></span>
+    <span class="name">${t.name}</span><span class="val">${t.val}</span></div>`;
+}
+function render(i){
+  cur = (i + FRAMES.length) % FRAMES.length;
+  const f = FRAMES[cur];
+  img.src = f.img;
+  img.style.width = f.w + 'px';
+  document.getElementById('i-kick').textContent = f.kick;
+  document.getElementById('i-title').textContent = f.title;
+  document.getElementById('i-desc').textContent = f.desc;
+  document.getElementById('i-notes').innerHTML = f.notes.map(n => `<div class="note">${n}</div>`).join('');
+  document.getElementById('i-tokens').innerHTML = f.tokens.map(swatch).join('');
+  document.querySelectorAll('.frame').forEach((el, j) => el.classList.toggle('on', j === cur));
+}
+FRAMES.forEach((f, i) => {
+  const b = document.createElement('button');
+  b.className = 'frame';
+  b.innerHTML = `<span class="dot ${f.dot || ''}"></span>${f.title}<span class="num">${String(i+1).padStart(2,'0')}</span>`;
+  b.addEventListener('click', () => render(i));
+  (f.foundation ? found : rail).appendChild(b);
+});
+document.getElementById('zoombar').addEventListener('click', e => {
+  const z = e.target.dataset && e.target.dataset.z;
+  if (!z) return;
+  stage.style.transform = `scale(${z})`;
+  document.querySelectorAll('#zoombar button').forEach(b => b.classList.toggle('on', b === e.target));
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') render(cur + 1);
+  if (e.key === 'ArrowLeft') render(cur - 1);
+});
+render(0);
+</script>
+</body>
+</html>
